@@ -1,11 +1,26 @@
 body
 {
   background: #333;
+  font-family: sans-serif;
 }
 
-path
+
+#game
 {
-  fill: #fff
-  stroke-width: 3
-  stroke: #ccc
+  display: block;
+  margin: 3em auto;
+  border: 10px solid #444;
+  background: #000;
+}
+
+#debug
+{
+  background: #444;
+  padding: 1em;
+  position: absolute;
+  top: 3em;
+  left: 1em;
+  width: 200px;
+  color: #fff;
+  
 }

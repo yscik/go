@@ -1,0 +1,168 @@
+boolean redraw = false;
+
+var grid = [];
+var players = [];
+var keys = {};
+var localplayer;
+
+void keyReleased()
+{
+  delete(keys["key-"+key]);
+}
+
+void keyPressed()
+{
+  keys["key-"+key] = true;
+}
+
+void setup(){  
+    
+  frameRate(30);  
+  
+  localplayer = new player();
+  localplayer.x = 300;
+  localplayer.y = 300;
+  players.push(localplayer); 
+  
+  for(int i = 0; i < 8; i++)
+  {
+    for(int j = 0; j < 10; j++)
+    {
+        grid.push(new hex(300*i,+173.6*j));
+        grid.push(new hex(150+300*i,86.6+173.6*j));
+    }
+  }
+  
+  redraw = true;  
+}  
+  
+// Main draw loop  
+void draw(){  
+  
+  var d = 9;  
+  
+  for(k in keys)
+  {
+    switch(k)
+    {
+      case 'key-119':
+        redraw = true;
+        localplayer.y = max(0, localplayer.y-d);
+        break;
+      case 'key-115':
+        redraw = true;
+        localplayer.y = min(height, localplayer.y+d);
+        break;
+      case 'key-97':
+        redraw = true;
+        localplayer.x = max(0, localplayer.x-d);
+        break;
+      case'key-100':
+        redraw = true;
+        localplayer.x = min(width, localplayer.x+d);
+        break;
+    }
+    
+  }
+  
+  if(redraw)
+  {  
+    
+    background(0);  
+      
+    pushMatrix();
+    scale(0.3);
+    translate(-100,-186.6);
+    for(int i = grid.length; i--;)
+    {
+      grid[i].hover = (grid[i].in(localplayer.x, localplayer.y));
+      grid[i].render();
+    }
+    popMatrix();
+    
+    for(int i = players.length; i--;)
+    {
+      players[i].render();
+    }
+    
+    redraw = false;
+  }
+  
+  debug.fps(frameRate);
+}  
+
+var hex = function(x, y)
+{
+  this.hover = false;
+  
+  var vertices = [
+    [100,100],
+    [200, 100],
+    [250, 186.6],
+    [200, 273.2],
+    [100, 273.2],
+    [50, 186.6],
+  ];
+  
+  this.render = function()
+  {
+    if(this.hover)
+      fill( 40, 40, 40 );
+    else
+      fill( 0, 0, 0 );
+    
+    stroke(100);   
+    strokeWeight( 10 );  
+
+    pushMatrix();
+    translate(x,y);
+    beginShape();
+    for(v = 0; v < vertices.length; v++)
+    {
+      vertex(vertices[v][0], vertices[v][1]);
+    }
+    
+    endShape(CLOSE);
+    popMatrix();
+    
+  }
+  this.in = function(px,py)
+  {
+    var p1 = hmap(vertices[0][0] + x, vertices[0][1] + y);
+    var p2 = hmap(vertices[1][0] + x, vertices[3][1] + y);
+    
+    return (px > p1.x && px < p2.x && py > p1.y && py < p2.y);
+  }
+  
+}
+
+
+var player = function()
+{
+  this.x = 0;
+  this.y = 0;
+  var rad = 15;
+  
+  this.render = function()
+  {
+    pushMatrix();
+    noStroke();
+    fill( 0, 121, 184 );  
+    ellipse(this.x,this.y, rad, rad);
+    popMatrix();
+  }
+}
+
+var hmap = function(x,y)
+{
+  var h = { "x": (x-100)*0.3, "y": (y-186.6)*0.3 };
+  return h;
+}
+
+
+var debug = new function()
+{
+  d = $("#debug")
+  fpsDisplay = $("#fps")
+  this.fps = function(val) { fpsDisplay.text(Math.round(val) + " fps"); }
+}
