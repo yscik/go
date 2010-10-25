@@ -1,0 +1,112 @@
+<!doctype html>
+
+<html>
+  <head>
+    <title>Goo</title>
+		<style type="text/css">
+#controls {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background: #fff;
+	padding: 0.5em;
+	display: block;
+}
+
+#message {width: 80%;}
+
+#log {
+  font-family: helvetica, arial, sans-serif;
+  font-size: .8em;
+  padding-bottom: 40px;
+}
+		</style>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+  </head>
+  <body>
+  
+		<div id="log"></div>
+    <script type="text/javascript">
+var conn;
+$(function(){
+  var history = [], idx = 0;
+
+  var logpanel = $("#log");
+  var players = [];
+
+  function scrollToBottom() {
+      window.scrollBy(0, document.body.scrollHeight - document.body.scrollTop);
+  };
+
+  function log(data) {
+    logpanel.append("<p>"+data+"</p>");
+    scrollToBottom();
+  };
+  
+  function addPlayer(username, x, y) {
+    var p = $('<div></div>')
+      .attr({'id': 'player[]'})
+      .css({
+        'position': 'fixed',
+        'border': '3px solid grey',
+        'background': '#efefef',
+        'width':  '20px',
+        'height': '20px',
+        'left': x+'px',
+        'bottom': y+'px'
+        });
+ 
+    players[username] = p;        
+    p.appendTo($('body'));
+  };
+  
+  function removePlayer(username) {
+    players[username].remove();
+    delete players[username];
+  };
+
+  if (window["WebSocket"]) {
+    conn = new WebSocket("ws://"+document.location.host+"/");
+
+    conn.onmessage = function(evt) {
+      var msg = JSON.parse(evt.data);
+      
+      if(msg.event == "login") {
+        $.each(msg.data, function() {
+          addPlayer(this.username, this.x, this.y);
+          });
+      }
+      else if(msg.event == "update") {
+        $.each(msg.data, function() {
+          players[this.username].css({
+            'left': this.x+'px',
+            'bottom': this.y+'px',
+            '-moz-transform': 'rotate('+this.angle+'deg)',
+            '-wbkit-transform': 'rotate('+this.angle+'deg)'
+            });
+          });
+      }
+      else if(msg.event == "logout") {
+        removePlayer(msg.data);
+      }
+      
+      log(evt.data);
+    };
+
+    conn.onclose = function() {
+      log("** you have been disconnected");
+    };
+
+    conn.onopen = function(){
+      $('body')
+        .unload(function() { conn.close(); }) // Amikor kell lelővi a kapcsolatot
+        .click(function(e) { conn.send(JSON.stringify({x: e.pageX, y: e.pageY})) }); // Próba esemény
+       
+      log("** you have been connected");
+    }
+  }
+});
+    </script>
+  </body>
+</html>
